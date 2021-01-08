@@ -33,8 +33,8 @@ namespace LifeSimulatorLibrary
 			foreach (Tile tile in Tiles)
 			{
 				id = tile.Id + Tiles.Length;
-				tile.Neighbours.Add(Tiles[(id - width) % Tiles.Length]);
-				tile.Neighbours.Add(Tiles[(id + width) % Tiles.Length]);
+				tile.Neighbours.Add(Tiles[(id - 1) % Tiles.Length]);
+				tile.Neighbours.Add(Tiles[(id + 1) % Tiles.Length]);
 				tile.Neighbours.Add(Tiles[(id - width) % Tiles.Length]);
 				tile.Neighbours.Add(Tiles[(id + width) % Tiles.Length]);
 			}

@@ -12,6 +12,8 @@ namespace LifeSimulatorLibrary
 		public int AmountOfPredators { get; set; }
 		public Tile[] Tiles { get; set; }
 		public List<Animal> Animals { get; set; } = new List<Animal>();
+		public List<Animal> DeadAnimals { get; set; } = new List<Animal>();
+		public List<Animal> BornAnimals { get; set; } = new List<Animal>();
 
 		private Random Random { get; set; } = new Random();
 
@@ -42,54 +44,83 @@ namespace LifeSimulatorLibrary
 			for (int i = 0; i < amountOfPrey; i++)
 			{
 				randomTile = Tiles[Random.Next(Tiles.Length)];
-				newAnimal = new Prey(randomTile, (Gender)Random.Next(2));
-				randomTile.Animals.Add(newAnimal);
+				newAnimal = new Prey(randomTile, (Gender)Random.Next(2))
+				{
+					onDeath = AddDeadAnimal,
+					onBirth = AddBornAnimal
+				};
+				randomTile.AddAnimal(newAnimal);
+				Animals.Add(newAnimal);
 			}
 			for (int i = 0; i < amountOfPredators; i++)
 			{
 				randomTile = Tiles[Random.Next(Tiles.Length)];
-				newAnimal = new Predator(randomTile, (Gender)Random.Next(2));
-				randomTile.Animals.Add(newAnimal);
-			}
-			UpdateListAnimals();
-		}
-
-		public void Tic()
-		{
-			foreach (Animal animal in Animals)
-			{
-				if (animal is Predator predator)
+				newAnimal = new Predator(randomTile, (Gender)Random.Next(2))
 				{
-					predator.Eat();
-				}
-			}
-			UpdateListAnimals();
-			foreach (Animal animal in Animals)
-			{
-				animal.Reproduce();
-			}
-			UpdateListAnimals();
-			foreach (Animal animal in Animals)
-			{
-				animal.Move();
+					onDeath = AddDeadAnimal,
+					onBirth = AddBornAnimal
+				};
+				randomTile.AddAnimal(newAnimal);
+				Animals.Add(newAnimal);
 			}
 		}
 
 		public void Start()
 		{
-			while(Animals.Where(animal => animal is Predator).Count() > 0)
+			while(true)
 			{
-				Tic();
+				foreach (Animal animal in Animals)
+				{
+					if (animal is Predator predator)
+					{
+						predator.Eat();
+					}
+				}
+				CollectDeadAnimals();
+				if (Animals.Where(animal => animal is Predator).Count() == 0)
+				{
+					break;
+				}
+				foreach (Animal animal in Animals)
+				{
+					animal.Reproduce();
+				}
+				CollectBornAnimals();
+				foreach (Animal animal in Animals)
+				{
+					animal.Move();
+				}
 			}
 		}
 
-		public void UpdateListAnimals()
+		public void AddDeadAnimal(Animal animal)
 		{
-			Animals.Clear();
-			foreach (Tile tile in Tiles)
+			DeadAnimals.Add(animal);
+		}
+
+		public void AddBornAnimal(Animal animal)
+		{
+			animal.onBirth = AddBornAnimal;
+			animal.onDeath = AddDeadAnimal;
+			BornAnimals.Add(animal);
+		}
+
+		public void CollectDeadAnimals()
+		{
+			foreach (Animal deadAnimal in DeadAnimals)
 			{
-				Animals.AddRange(tile.Animals);
+				Animals.Remove(deadAnimal);
 			}
+			DeadAnimals.Clear();
+		}
+
+		public void CollectBornAnimals()
+		{
+			foreach (Animal bornAnimal in BornAnimals)
+			{
+				Animals.Add(bornAnimal);
+			}
+			BornAnimals.Clear();
 		}
 	}
 }

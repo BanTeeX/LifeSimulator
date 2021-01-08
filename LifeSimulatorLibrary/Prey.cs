@@ -10,15 +10,12 @@ namespace LifeSimulatorLibrary
 		{
 		}
 
-		public override List<Animal> FindPartners()
-		{
-			return Position.Animals.Where(animal => animal is Prey && animal.IsAbleToReproduce && animal.Gender != Gender && animal != this).ToList();
-		}
-
 		public override void GiveBirth()
 		{
 			Console.WriteLine($"Birth {GetType()}"); //########################################
-			Position.Animals.Add(new Prey(Position, (Gender)Random.Next(2)));
+			Prey newPrey = new Prey(Position, (Gender)Random.Next(2));
+			onBirth(newPrey);
+			Position.AddAnimal(newPrey);
 		}
 	}
 }

@@ -1,14 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace LifeSimulatorLibrary
 {
+	public enum Gender
+	{
+		Male,
+		Female
+	}
+
+	public delegate void OnDeath(Animal animal);
+	public delegate void OnBirth(Animal animal);
+
 	public abstract class Animal
 	{
 		public Tile Position { get; set; }
 		public Gender Gender { get; set; }
 		public bool IsAbleToReproduce { get; set; } = true;
+		public OnDeath onDeath;
+		public OnBirth onBirth;
 
 		protected Random Random { get; set; } = new Random();
 
@@ -22,8 +31,8 @@ namespace LifeSimulatorLibrary
 		{
 			Console.WriteLine($"Move {GetType()}"); //###################################
 			Tile newTile = Position.Neighbours[Random.Next(Position.Neighbours.Count)];
-			newTile.Animals.Add(this);
-			Position.Animals.Remove(this);
+			newTile.AddAnimal(this);
+			Position.RemoveAnimal(this);
 			Position = newTile;
 			IsAbleToReproduce = true;
 		}
@@ -31,22 +40,24 @@ namespace LifeSimulatorLibrary
 		public void Die()
 		{
 			Console.WriteLine($"Die {GetType()}"); //#################################
-			Position.Animals.Remove(this);
+			onDeath(this);
+			Position.RemoveAnimal(this);
 		}
-
-		public abstract List<Animal> FindPartners();
 
 		public abstract void GiveBirth();
 
 		public void Reproduce()
 		{
-			List<Animal> temp = FindPartners();
-			if (IsAbleToReproduce && temp.Count() > 0)
+			if (IsAbleToReproduce)
 			{
-				Console.WriteLine($"Reproduce {GetType()}"); //##########################
-				IsAbleToReproduce = false;
-				temp[0].IsAbleToReproduce = false;
-				GiveBirth();
+				Animal temp = Position.FindPartner(this);
+				if (temp != null)
+				{
+					Console.WriteLine($"Reproduce {GetType()}"); //##########################
+					IsAbleToReproduce = false;
+					temp.IsAbleToReproduce = false;
+					GiveBirth();
+				}
 			}
 		}
 	}
